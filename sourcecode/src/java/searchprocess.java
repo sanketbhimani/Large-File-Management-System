@@ -41,15 +41,20 @@ public class searchprocess extends HttpServlet {
     HashMap<String, ArrayList<String>> hypernym, hyponym;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, FileNotFoundException, XMLStreamException {
+            throws ServletException, IOException, FileNotFoundException, XMLStreamException, ClassNotFoundException {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             hypernym = new HashMap<String, ArrayList<String>>();
             hyponym = new HashMap<String, ArrayList<String>>();
 
             String searchKey = request.getParameter("searchKey");
+            
             search s = new search();
             s.searchWord(searchKey);
+            
+            
+            //search s = new search();
+            //s.searchWord(searchKey);
             hypernym = s.getHypernym();
             hyponym = s.getHyponym();
             request.setAttribute("hypernym", hypernym);
@@ -64,53 +69,37 @@ public class searchprocess extends HttpServlet {
     protected String createJSONResponse(String searchKey) {
         ArrayList<String> result;
         //ArrayList<String> side_result;
-        JsonArrayBuilder def = Json.createArrayBuilder();
         ArrayList<String> hyprCount, hypoCount;
         int cnt = 0;
         JsonArrayBuilder final_array = Json.createArrayBuilder();
-        
+        JsonArrayBuilder defs = Json.createArrayBuilder();
         for (String key : hypernym.keySet()) {
             hyprCount = new ArrayList<String>();
             hypoCount = new ArrayList<String>();
             result = hypernym.get(key);
-            JsonArrayBuilder adjacencies = Json.createArrayBuilder();
+            
+            JsonArrayBuilder hypo = Json.createArrayBuilder();
+            JsonArrayBuilder hypr = Json.createArrayBuilder();
+            
             for (int i = 0; i < result.size(); i++) {
-                final_array.add(Json.createObjectBuilder().add("id", cnt + "hypr").add("name", result.get(i)).add("adjacencies", adjacencies.build()).add("data", Json.createObjectBuilder().add("$color", "#0000FF").add("$type", "square").add("$dim", 7).build()).build());
-                hyprCount.add(cnt + "hypr");
+                hypo.add(Json.createObjectBuilder().add("id", cnt+"truehypo").add("name", result.get(i)).add("children", Json.createArrayBuilder()));
                 cnt++;
             }
-            adjacencies = null;
-
-            //   cnt++;
-            result.clear();
-            result = hyponym.get(key);
-            adjacencies = Json.createArrayBuilder();
-            for (int i = 0; i < result.size(); i++) {
-                final_array.add(Json.createObjectBuilder().add("id", cnt + "hypo").add("name", result.get(i)).add("adjacencies", adjacencies.build()).add("data", Json.createObjectBuilder().add("$color", "#FF0000").add("$type", "square").add("$dim", 7).build()).build());
-                hyprCount.add(cnt + "hypo");
+            
+            for (int i = 0; i < hyponym.get(key).size(); i++) {
+                hypo.add(Json.createObjectBuilder().add("id", cnt+"truehypr").add("name", hyponym.get(key).get(i)).add("children", Json.createArrayBuilder()));
                 cnt++;
             }
-
-            adjacencies = null;
-            adjacencies = Json.createArrayBuilder();
-
-            for (int i = 0; i < hyprCount.size(); i++) {
-                adjacencies.add(Json.createObjectBuilder().add("nodeTo", hyprCount.get(i)).add("nodeFrom", cnt).add("data", Json.createObjectBuilder().add("$color", "#0000FF").build()).build());
-            }
-
-            for (int i = 0; i < hypoCount.size(); i++) {
-                adjacencies.add(Json.createObjectBuilder().add("nodeTo", hypoCount.get(i)).add("nodeFrom", cnt).add("data", Json.createObjectBuilder().add("$color", "#FF0000").build()).build());
-            }
-
-            final_array.add(Json.createObjectBuilder().add("id", cnt).add("name", key).add("adjacencies", adjacencies.build()).add("data", Json.createObjectBuilder().add("$color", "#000000").add("$type", "square").add("$dim", 7).build()).build());
-
-        }
-
-       
-       // JsonArrayBuilder array = Json.createArrayBuilder();
-        
-        //array.add(Json.createObjectBuilder().add("graph",final_array.build()).add("side_panel",side_panel.build()));
-         return final_array.build().toString();
+            
+            //defs.add(Json.createObjectBuilder().add("id", cnt).add("name", key).add("children", Json.createArrayBuilder().add(Json.createObjectBuilder().add("id", cnt+1).add("name", "hypo").add("children",hypo)).add(Json.createObjectBuilder().add("id", cnt+2).add("name", "hypr").add("children",hypr))).build());
+            defs.add(Json.createObjectBuilder().add("id", cnt+"s").add("name", key).add("children", hypo.build()));
+            
+            cnt+=3;
+         }
+            
+            final_array.add(Json.createObjectBuilder().add("id", cnt+"s").add("name", searchKey).add("children", defs).build());
+            
+            return final_array.build().toString();
     }
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
 
@@ -129,6 +118,8 @@ public class searchprocess extends HttpServlet {
             processRequest(request, response);
         } catch (XMLStreamException ex) {
             Logger.getLogger(searchprocess.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(searchprocess.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -146,6 +137,8 @@ public class searchprocess extends HttpServlet {
         try {
             processRequest(request, response);
         } catch (XMLStreamException ex) {
+            Logger.getLogger(searchprocess.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
             Logger.getLogger(searchprocess.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
