@@ -27,36 +27,48 @@ public class search {
 
     public void searchWord(String searchKey) throws FileNotFoundException {
         try {
-            ArrayList<String> synset = new ArrayList<String>();
             
-            ArrayList<String> definitions = new ArrayList<String>();
+            //here all containers are defines
+            
+            ArrayList<String> synset = new ArrayList<String>();         //list of all synset
+            ArrayList<String> definitions = new ArrayList<String>();    //list of all definations
             hypernym = new ArrayList<String>();
             hyponym = new ArrayList<String>();
             hypernymMapId = new HashMap<String, ArrayList<String>>();
-            hyponymMapId = new HashMap<String, ArrayList<String>>();
-            boolean foundFlag = false;
-            boolean definitionFlag = false;
+            hyponymMapId = new HashMap<String, ArrayList<String>>();    //collection of hyponym with defination
+            
+            
+            boolean foundFlag = false;  //when particuler word found it become true
+            boolean definitionFlag = false;  // when we are in defination tag it become true
+            
+            
+            
+            //here file is initialized and factory classes are started
             InputStream is = new FileInputStream("C:\\Users\\Sanket Bhimani\\Desktop\\sdp project\\EWNlexicalEntry.xml");
             XMLInputFactory factory = XMLInputFactory.newInstance();
             XMLStreamReader reader = factory.createXMLStreamReader(is);
+            
+            
+            //it generates all events, here in start event, we are looking for given word if found we make found flag true
+            //and push this id to synset list
             while (reader.hasNext()) {
                 int event = reader.next();
-                
+
                 switch (event) {
                     case XMLStreamConstants.START_ELEMENT:
                         String element = reader.getLocalName();
                         if (element.equalsIgnoreCase("lemma")) {
-                            
+
                             if (searchKey.equalsIgnoreCase(reader.getAttributeValue(1))) {
                                 foundFlag = true;
-                                
+
                             }
                         }
-                        
+
                         if (element.equalsIgnoreCase("sense")) {
                             if (foundFlag) {
                                 synset.add(reader.getAttributeValue(0));
-                             //   System.out.println(reader.getAttributeValue(0));
+                                //   System.out.println(reader.getAttributeValue(0));
                             }
                         }
                         break;
@@ -69,14 +81,14 @@ public class search {
                         break;
                 }
             }
-            
+            //now another file is opend and get details of all synset and generate hypo and hypr hashmap with the key of defination.
             is = new FileInputStream("C:\\Users\\Sanket Bhimani\\Desktop\\sdp project\\EWNsynset.xml");
             reader = factory.createXMLStreamReader(is);
             String temp = "";
             while (reader.hasNext()) {
                 int event = reader.next();
                 if (synset.size() == 0) {
-                    
+
                     break;
                 }
                 switch (event) {
@@ -90,16 +102,16 @@ public class search {
                                 definitionFlag = true;
                             }
                         }
-                        
+
                         if (startElement.equalsIgnoreCase("definition")) {
                             if (definitionFlag) {
-                               // System.out.println(reader.getAttributeValue(0));
+                                // System.out.println(reader.getAttributeValue(0));
                                 definitions.add(reader.getAttributeValue(0));
-                                
+
                             }
-                            
+
                         }
-                        
+
                         if (startElement.equalsIgnoreCase("SynsetRelation")) {
                             if (definitionFlag) {
                                 String type = reader.getAttributeValue(0);
@@ -111,15 +123,15 @@ public class search {
                             }
                         }
                         break;
-                        
+
                     case XMLStreamConstants.END_ELEMENT:
                         String endElement = reader.getLocalName();
                         if (endElement.equalsIgnoreCase("synset")) {
                             if (definitionFlag) {
-                                
+
                                 hypernymTemp = (ArrayList<String>) hypernym.clone();
                                 hyponymTemp = (ArrayList<String>) hyponym.clone();
-                                
+
                                 hypernymMapId.put(definitions.get(definitions.size() - 1), searchHypernym(hypernymTemp));
                                 hyponymMapId.put(definitions.get(definitions.size() - 1), searchHyponym(hyponymTemp));
                                 hyponym.clear();

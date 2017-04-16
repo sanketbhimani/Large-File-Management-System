@@ -48,11 +48,12 @@ public class searchprocess extends HttpServlet {
             hyponym = new HashMap<String, ArrayList<String>>();
 
             String searchKey = request.getParameter("searchKey");
+
+            //make object of search class and init with key and get hypr and hypo hashmap
             
             search s = new search();
             s.searchWord(searchKey);
-            
-            
+
             //search s = new search();
             //s.searchWord(searchKey);
             hypernym = s.getHypernym();
@@ -65,6 +66,9 @@ public class searchprocess extends HttpServlet {
             //  rd.forward(request, response);
         }
     }
+    
+    
+    //after getting hashmap we are generating JSON responce using JSON builder classes
 
     protected String createJSONResponse(String searchKey) {
         ArrayList<String> result;
@@ -77,29 +81,29 @@ public class searchprocess extends HttpServlet {
             hyprCount = new ArrayList<String>();
             hypoCount = new ArrayList<String>();
             result = hypernym.get(key);
-            
+
             JsonArrayBuilder hypo = Json.createArrayBuilder();
             JsonArrayBuilder hypr = Json.createArrayBuilder();
-            
+
             for (int i = 0; i < result.size(); i++) {
-                hypo.add(Json.createObjectBuilder().add("id", cnt+"truehypo").add("name", result.get(i)).add("children", Json.createArrayBuilder()));
+                hypo.add(Json.createObjectBuilder().add("id", cnt + "truehypo").add("name", result.get(i)).add("children", Json.createArrayBuilder()));
                 cnt++;
             }
-            
+
             for (int i = 0; i < hyponym.get(key).size(); i++) {
-                hypo.add(Json.createObjectBuilder().add("id", cnt+"truehypr").add("name", hyponym.get(key).get(i)).add("children", Json.createArrayBuilder()));
+                hypo.add(Json.createObjectBuilder().add("id", cnt + "truehypr").add("name", hyponym.get(key).get(i)).add("children", Json.createArrayBuilder()));
                 cnt++;
             }
-            
+
             //defs.add(Json.createObjectBuilder().add("id", cnt).add("name", key).add("children", Json.createArrayBuilder().add(Json.createObjectBuilder().add("id", cnt+1).add("name", "hypo").add("children",hypo)).add(Json.createObjectBuilder().add("id", cnt+2).add("name", "hypr").add("children",hypr))).build());
-            defs.add(Json.createObjectBuilder().add("id", cnt+"s").add("name", key).add("children", hypo.build()));
-            
-            cnt+=3;
-         }
-            
-            final_array.add(Json.createObjectBuilder().add("id", cnt+"s").add("name", searchKey).add("children", defs).build());
-            
-            return final_array.build().toString();
+            defs.add(Json.createObjectBuilder().add("id", cnt + "s").add("name", key).add("children", hypo.build()));
+
+            cnt += 3;
+        }
+
+        final_array.add(Json.createObjectBuilder().add("id", cnt + "s").add("name", searchKey).add("children", defs).build());
+
+        return final_array.build().toString();
     }
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
 
